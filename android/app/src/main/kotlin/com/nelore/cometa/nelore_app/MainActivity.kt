@@ -1,4 +1,4 @@
-package com.nelore.cometa.futebol_app
+package com.goal.trackr.futebol_app
 
 import io.flutter.embedding.android.FlutterActivity
 
