@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:futebol_app/screens/history/history.dart';
+import 'package:futebol_app/screens/settings/settings.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -36,12 +38,14 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 40),
               ElevatedButton(
                 onPressed: () {
+                  Navigator.pushNamed(context, Settings.routeName);
                 },
                 child: const Text('Novo jogo'),
               ),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
+                  Navigator.pushNamed(context, History.routeName);
                 },
                 child: const Text('Histórico'),
               ),
