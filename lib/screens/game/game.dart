@@ -4,6 +4,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:futebol_app/hive/games.dart';
 import 'package:hive/hive.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
+
+import 'components/timer.dart';
 
 class Game extends StatefulWidget {
   const Game({Key? key}) : super(key: key);
@@ -14,6 +17,7 @@ class Game extends StatefulWidget {
 }
 
 class _GameState extends State<Game> {
+  final GlobalKey<CountdownState> _timerKey = GlobalKey<CountdownState>();
   Map<String, dynamic>? args;
   late Box gamesBox;
   
@@ -30,6 +34,16 @@ class _GameState extends State<Game> {
     setState(() {
       paused = true;
     });
+    _timerKey.currentState?.pauseTimer();
+    showMenu();
+  }
+
+  void resume() {
+    Navigator.pop(context);
+    setState(() {
+      paused = false;
+    });
+    _timerKey.currentState?.resumeTimer();
   }
 
   void getInfos() {
@@ -48,6 +62,101 @@ class _GameState extends State<Game> {
       // ignore: avoid_print
       print('[ ERROR: Missing game id on game start ]');
     }
+  }
+
+  void showMenu() {
+    showMaterialModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isDismissible: false,
+      enableDrag: false,
+
+      builder: (context) => Center(
+        child: Container(
+          width: ScreenUtil().screenWidth,
+          height: ScreenUtil().screenHeight,
+          color: Colors.transparent,
+          child: Stack(
+            children: [
+              Positioned(
+                top: ScreenUtil().screenHeight * .25/2,
+                left: ScreenUtil().screenWidth * .25,
+                child: Container(
+                  width: ScreenUtil().screenWidth * .5,
+                  height: ScreenUtil().screenHeight * .75,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.all(Radius.circular(10))
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          GestureDetector(
+                            onTap: resume,
+                            child: const SizedBox(
+                              width: 50,
+                              height: 50,
+                              child: Center(
+                                child: FaIcon(
+                                  FontAwesomeIcons.xmark,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 50),
+                      Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 80),
+                        child: ElevatedButton(
+                          onPressed: () {
+                          },
+                          child: const Text(
+                            '+1 min acréscimo',
+                            style: TextStyle(
+                              fontSize: 18
+                            ),
+                          ),
+                        ),
+                      ),
+                      Container(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 80,
+                          vertical: 20
+                        ),
+                        child: OutlinedButton(
+                          onPressed: () {
+                          },
+                          style: ButtonStyle(
+                            side: MaterialStateProperty.all<BorderSide>(
+                              const BorderSide(
+                                width: 2.0,
+                                color: Colors.red
+                              )
+                            ),
+                          ),
+                          child: const Text(
+                            'Encerrar Partida',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.red
+                            ),
+                          ),
+                        ),
+                      )
+                    ],
+                  )
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -158,13 +267,10 @@ class _GameState extends State<Game> {
                       bottomRight: Radius.circular(35),
                     )
                   ),
-                  child: const Center(
-                    child: Text(
-                      '00:35',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w800
-                      ),
+                  child: Center(
+                    child: Countdown(
+                      key: _timerKey,
+                      durationString: duration,
                     ),
                   ),
                 )
