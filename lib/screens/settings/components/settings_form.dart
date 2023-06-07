@@ -2,8 +2,9 @@ import 'package:duration_picker/duration_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:futebol_app/hive/games.dart';
 import 'package:futebol_app/hive/settings.dart';
-import 'package:futebol_app/screens/home/home.dart';
+import 'package:futebol_app/screens/game/game.dart';
 import 'package:hive/hive.dart';
 
 import 'package:futebol_app/components/custom_suffix_icon.dart';
@@ -29,6 +30,7 @@ class _SettingsFormState extends State<SettingsForm> {
 
   final _formKey = GlobalKey<FormState>();
   late Box settingsBox;
+  late Box gamesBox;
 
   Map settings = {
     'teamA': 'Time A',
@@ -58,16 +60,34 @@ class _SettingsFormState extends State<SettingsForm> {
   void save() async {
     try {
       settingsBox = Hive.box<Settings>(settingsBoxName);
+      gamesBox = Hive.box<Games>(gamesBoxName);
       settingsBox.put(
         'settings',
         Settings(
           duration: settings['duration'],
-          times: settings['times'],
+          times: int.parse(settings['times']),
         )
       );
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (BuildContext context){
-        return const HomeScreen();
-      }));
+
+      int gameId = gamesBox.keys.length;
+      gamesBox.put(
+        '$gameId',
+        Games(
+          teamA: settings['teamA'],
+          teamB: settings['teamB'],
+          goalsA: 0,
+          goalsB: 0,
+          duration: settings['duration'],
+          times: int.parse(settings['times']),
+        )
+      );
+      Navigator.pushNamed(
+        context,
+        Game.routeName,
+        arguments: {
+          'id': gameId
+        }
+      );
     } catch (err) {
       toast(
         message: 'Erro ao salvar as configurações. Tente novamente.',
