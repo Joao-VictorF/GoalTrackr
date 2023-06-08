@@ -73,7 +73,7 @@ class _HistoryState extends State<History> {
                     ),
                   ),
                 ),
-                for(int i = 0; i < games.length; i++)
+                for(int i = games.length - 1; i >= 0; i--)
                   GameCard(game: games.elementAt(i))
               ],
             ),

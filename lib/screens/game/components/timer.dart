@@ -50,6 +50,12 @@ class CountdownState extends State<Countdown> {
     startTimer();
   }
 
+  void addTime(Duration timeToAdd) {
+    setState(() {
+      duration = duration + timeToAdd;
+    });
+  }
+
   Duration parseDurationString(String durationString) {
     final parts = durationString.split(':');
     final hours = int.parse(parts[0]);
