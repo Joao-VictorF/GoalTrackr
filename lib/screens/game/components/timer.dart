@@ -3,10 +3,12 @@ import 'dart:async';
 
 class Countdown extends StatefulWidget {
   final String durationString;
+  final Function() timeEnded;
 
   const Countdown({
     required Key key,
-    required this.durationString
+    required this.durationString,
+    required this.timeEnded,
   }) : super(key: key);
 
   @override
@@ -14,13 +16,16 @@ class Countdown extends StatefulWidget {
 }
 
 class CountdownState extends State<Countdown> {
-  late Duration duration;
+  late Duration initialDuration;
+  late Duration currentDuration;
   late Timer timer;
+  bool isTimerRunning = false;
 
   @override
   void initState() {
     super.initState();
-    duration = parseDurationString(widget.durationString);
+    initialDuration = parseDurationString(widget.durationString);
+    currentDuration = initialDuration;
     startTimer();
   }
 
@@ -31,28 +36,44 @@ class CountdownState extends State<Countdown> {
   }
 
   void startTimer() {
+    if (isTimerRunning) return; // Prevent starting multiple timers
+    isTimerRunning = true;
     timer = Timer.periodic(const Duration(seconds: 1), (Timer t) {
       setState(() {
-        if (duration.inSeconds > 0) {
-          duration = duration - const Duration(seconds: 1);
+        if (currentDuration.inSeconds > 0) {
+          currentDuration = currentDuration - const Duration(seconds: 1);
         } else {
           timer.cancel();
+          widget.timeEnded(); // Call the provided timeEnded function
         }
       });
     });
   }
 
   void pauseTimer() {
+    if (!isTimerRunning) return;
+    isTimerRunning = false;
     timer.cancel();
   }
 
   void resumeTimer() {
-    startTimer();
+    if (isTimerRunning) return; // Prevent resuming when the timer is already running
+    isTimerRunning = true;
+    timer = Timer.periodic(const Duration(seconds: 1), (Timer t) {
+      setState(() {
+        if (currentDuration.inSeconds > 0) {
+          currentDuration = currentDuration - const Duration(seconds: 1);
+        } else {
+          timer.cancel();
+          widget.timeEnded(); // Call the provided timeEnded function
+        }
+      });
+    });
   }
 
   void addTime(Duration timeToAdd) {
     setState(() {
-      duration = duration + timeToAdd;
+      currentDuration = currentDuration + timeToAdd;
     });
   }
 
@@ -78,7 +99,7 @@ class CountdownState extends State<Countdown> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            formatDuration(duration),
+            formatDuration(currentDuration),
             style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 24

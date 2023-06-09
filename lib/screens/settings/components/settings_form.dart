@@ -165,10 +165,10 @@ class _SettingsFormState extends State<SettingsForm> {
             margin: const EdgeInsets.only(top: 20.0),
             child: buildDurationFormField(),
           ),
-          Container(
-            margin: const EdgeInsets.only(top: 20.0, bottom: 10.0),
-            child: buildTimesFormField(),
-          ),
+          // Container(
+          //   margin: const EdgeInsets.only(top: 20.0, bottom: 10.0),
+          //   child: buildTimesFormField(),
+          // ),
           FormError(errors: errors),
           const SizedBox(height: 20.0),
           ElevatedButton(

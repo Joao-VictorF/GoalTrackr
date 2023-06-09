@@ -23,6 +23,7 @@ class _GameState extends State<Game> {
   late Box gamesBox;
   
   bool paused = false;
+  int currentTime = 1;
 
   int times = 2;
   int goalsA = 0;
@@ -37,7 +38,7 @@ class _GameState extends State<Game> {
       paused = true;
     });
     _timerKey.currentState?.pauseTimer();
-    showMenu();
+    showMenu('Menu', true);
   }
 
   void resume() {
@@ -66,7 +67,7 @@ class _GameState extends State<Game> {
     }
   }
 
-  void showMenu() {
+  void showMenu(String title, bool showClose) {
     showMaterialModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -101,25 +102,31 @@ class _GameState extends State<Game> {
                             width: 50,
                             height: 50,
                           ),
-                          const Text(
-                            'Menu',
-                            style: TextStyle(
+                          Text(
+                            title,
+                            style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold
                             ),
                           ),
-                          GestureDetector(
-                            onTap: resume,
-                            child: const SizedBox(
-                              width: 50,
-                              height: 50,
-                              child: Center(
-                                child: FaIcon(
-                                  FontAwesomeIcons.xmark,
+                          if(showClose)
+                            GestureDetector(
+                              onTap: resume,
+                              child: const SizedBox(
+                                width: 50,
+                                height: 50,
+                                child: Center(
+                                  child: FaIcon(
+                                    FontAwesomeIcons.xmark,
+                                  ),
                                 ),
                               ),
+                            )
+                          else
+                            const SizedBox(
+                              width: 50,
+                              height: 50,
                             ),
-                          ),
                         ],
                       ),
                       const SizedBox(height: 30),
@@ -141,7 +148,9 @@ class _GameState extends State<Game> {
                           vertical: 20
                         ),
                         child: OutlinedButton(
-                          onPressed: confirmFinishGameMenu,
+                          onPressed: () {
+                            confirmFinishGameMenu(false);
+                          },
                           style: ButtonStyle(
                             side: MaterialStateProperty.all<BorderSide>(
                               const BorderSide(
@@ -170,7 +179,7 @@ class _GameState extends State<Game> {
     );
   }
 
-  void confirmFinishGameMenu() {
+  void confirmFinishGameMenu(bool startSecondTime) {
     showMaterialModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -205,32 +214,40 @@ class _GameState extends State<Game> {
                             width: 50,
                             height: 50,
                           ),
-                          const Text(
-                            'Deseja encerrar a partida?',
-                            style: TextStyle(
+                          Text(
+                            startSecondTime ? 'Iniciar 2o tempo?' : 'Deseja encerrar a partida?',
+                            style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold
                             ),
                           ),
-                          GestureDetector(
-                            onTap: resume,
-                            child: const SizedBox(
-                              width: 50,
-                              height: 50,
-                              child: Center(
-                                child: FaIcon(
-                                  FontAwesomeIcons.xmark,
+                          if(!startSecondTime)
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.pop(context);
+                              },
+                              child: const SizedBox(
+                                width: 50,
+                                height: 50,
+                                child: Center(
+                                  child: FaIcon(
+                                    FontAwesomeIcons.xmark,
+                                  ),
                                 ),
                               ),
+                            )
+                          else 
+                            const SizedBox(
+                              width: 50,
+                              height: 50,
                             ),
-                          ),
                         ],
                       ),
                       const SizedBox(height: 30),
                       Container(
                         margin: const EdgeInsets.symmetric(horizontal: 80),
                         child: ElevatedButton(
-                          onPressed: finishGame,
+                          onPressed: startSecondTime ? resume : finishGame,
                           child: const Text(
                             'Sim',
                             style: TextStyle(
@@ -239,30 +256,33 @@ class _GameState extends State<Game> {
                           ),
                         ),
                       ),
-                      Container(
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 80,
-                          vertical: 20
-                        ),
-                        child: OutlinedButton(
-                          onPressed: resume,
-                          style: ButtonStyle(
-                            side: MaterialStateProperty.all<BorderSide>(
-                              const BorderSide(
-                                width: 2.0,
+                      if(!startSecondTime)
+                        Container(
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 80,
+                            vertical: 20
+                          ),
+                          child: OutlinedButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                            style: ButtonStyle(
+                              side: MaterialStateProperty.all<BorderSide>(
+                                const BorderSide(
+                                  width: 2.0,
+                                  color: Colors.red
+                                )
+                              ),
+                            ),
+                            child: const Text(
+                              'Não',
+                              style: TextStyle(
+                                fontSize: 18,
                                 color: Colors.red
-                              )
+                              ),
                             ),
                           ),
-                          child: const Text(
-                            'Não',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.red
-                            ),
-                          ),
-                        ),
-                      )
+                        )
                     ],
                   )
                 ),
@@ -335,6 +355,34 @@ class _GameState extends State<Game> {
       }
       lastActions.removeAt(lastIndex);
     }
+  }
+
+  void timerEndedHandle() {
+    if (currentTime == 1) {
+      setState(() {
+        currentTime = 2;
+      });
+      _timerKey.currentState?.addTime(parseDurationString(duration));
+      _timerKey.currentState?.pauseTimer();
+      setState(() {
+        paused = true;
+      });
+      confirmFinishGameMenu(true);
+    } else {
+      setState(() {
+        paused = true;
+      });
+      _timerKey.currentState?.pauseTimer();
+      showMenu('2o Tempo Encerrado', false);
+    }
+  } 
+
+  Duration parseDurationString(String durationString) {
+    final parts = durationString.split(':');
+    final hours = int.parse(parts[0]);
+    final minutes = int.parse(parts[1]);
+    final seconds = double.parse(parts[2]).toInt();
+    return Duration(hours: hours, minutes: minutes, seconds: seconds);
   }
 
   @override
@@ -449,6 +497,7 @@ class _GameState extends State<Game> {
                     child: Countdown(
                       key: _timerKey,
                       durationString: duration,
+                      timeEnded: timerEndedHandle,
                     ),
                   ),
                 )
@@ -472,7 +521,9 @@ class _GameState extends State<Game> {
                         gradient: LinearGradient(
                           begin: Alignment.centerLeft,
                           end: Alignment.centerRight,
-                          colors: [ Colors.red[800]!, Colors.red, Colors.blue, Colors.blue[800]!],
+                          colors: currentTime == 1
+                          ? [Colors.red[800]!, Colors.red, Colors.blue, Colors.blue[800]!]
+                          : [Colors.blue[800]!, Colors.blue, Colors.red, Colors.red[800]!],
                           stops: const [0.0, 0.35, 0.65, 1.0],
                         ),
                         borderRadius: const BorderRadius.only(
@@ -494,7 +545,7 @@ class _GameState extends State<Game> {
                             Container(
                               margin: const EdgeInsets.only(left: 40),
                               child: Text(
-                                teamA,
+                                currentTime == 1 ? teamA : teamB,
                                 style: const TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
@@ -505,7 +556,7 @@ class _GameState extends State<Game> {
                             Container(
                               margin: const EdgeInsets.only(right: 40),
                               child: Text(
-                                teamB,
+                                currentTime == 1 ? teamB : teamA,
                                 style: const TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
@@ -532,27 +583,38 @@ class _GameState extends State<Game> {
                 alignment: Alignment.topCenter,
                 child: Container(
                   width: ScreenUtil().screenWidth * .15,
-                  height: ScreenUtil().screenWidth * .05,
+                  height: ScreenUtil().screenWidth * .07,
                   decoration: const BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.all(Radius.circular(5))
                   ),
-                  child: Center(
-                    child: Text(
-                      '$goalsA X $goalsB',
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w800
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        currentTime == 1 ? '$goalsA X $goalsB' : '$goalsB X $goalsA',
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800
+                        ),
                       ),
-                    ),
-                  ),
+                      Text(
+                        '${currentTime}o Tempo',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600
+                        ),
+                      ),
+                    ],
+                  )
                 )
               )
             ),
 
             // GOAL TEAM A BTN
             Positioned(
-              left: ScreenUtil().screenWidth * .03,
+              left: currentTime == 1 ? ScreenUtil().screenWidth * .03 : null,
+              right: currentTime == 1 ? null : ScreenUtil().screenWidth * .03,
               bottom: ScreenUtil().screenWidth * .03,
               child: GestureDetector(
                 onTap: () => {
@@ -580,7 +642,8 @@ class _GameState extends State<Game> {
             ),
             // GOAL TEAM B BTN
             Positioned(
-              right: ScreenUtil().screenWidth * .03,
+              left: currentTime == 2 ? ScreenUtil().screenWidth * .03 : null,
+              right: currentTime == 2 ? null : ScreenUtil().screenWidth * .03,
               bottom: ScreenUtil().screenWidth * .03,
               child: GestureDetector(
                 onTap: () => {

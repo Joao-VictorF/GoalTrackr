@@ -25,7 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: Container (
           height: ScreenUtil().screenHeight,
-          margin: const EdgeInsets.only(top: 20.0),
+          margin: const EdgeInsets.only(top: 20.0, left: 20, right: 20),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
