@@ -65,7 +65,7 @@ class _SettingsFormState extends State<SettingsForm> {
         'settings',
         Settings(
           duration: settings['duration'],
-          times: int.parse(settings['times']),
+          times: int.parse(settings['times'].toString()),
         )
       );
 
@@ -78,7 +78,7 @@ class _SettingsFormState extends State<SettingsForm> {
           goalsA: 0,
           goalsB: 0,
           duration: settings['duration'],
-          times: int.parse(settings['times']),
+          times: int.parse(settings['times'].toString()),
         )
       );
       Navigator.pushNamed(
